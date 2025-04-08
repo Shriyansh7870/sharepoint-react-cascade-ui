@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from "sonner";
+import { sharepointConfig, initializeSharePointContext } from './sharepointConfig';
 
 // Define types for our SharePoint context
 type Permission = 'view' | 'edit' | 'admin';
@@ -18,6 +19,8 @@ interface SharePointContextType {
   hasPermission: (permission: Permission) => boolean;
   login: () => Promise<void>;
   logout: () => void;
+  isSharePointInitialized: boolean;
+  sharepointSiteUrl: string;
 }
 
 // Mock SharePoint users for demonstration
@@ -48,7 +51,9 @@ const SharePointContext = createContext<SharePointContextType>({
   currentUser: null,
   hasPermission: () => false,
   login: async () => {},
-  logout: () => {}
+  logout: () => {},
+  isSharePointInitialized: false,
+  sharepointSiteUrl: ""
 });
 
 export const useSharePoint = () => useContext(SharePointContext);
@@ -60,6 +65,7 @@ interface SharePointProviderProps {
 export const SharePointProvider: React.FC<SharePointProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isSharePointInitialized, setIsSharePointInitialized] = useState<boolean>(false);
 
   // Simulate checking for an existing session on mount
   useEffect(() => {
@@ -74,6 +80,17 @@ export const SharePointProvider: React.FC<SharePointProviderProps> = ({ children
         localStorage.removeItem('sharepointUser');
       }
     }
+    
+    // Initialize the SharePoint context
+    initializeSharePointContext()
+      .then(success => {
+        setIsSharePointInitialized(success);
+        if (success) {
+          toast.success("SharePoint context initialized successfully");
+        } else {
+          toast.error("Failed to initialize SharePoint context");
+        }
+      });
   }, []);
 
   // Function to check if user has a specific permission
@@ -113,7 +130,9 @@ export const SharePointProvider: React.FC<SharePointProviderProps> = ({ children
         currentUser,
         hasPermission,
         login,
-        logout
+        logout,
+        isSharePointInitialized,
+        sharepointSiteUrl: sharepointConfig.siteUrl
       }}
     >
       {children}
