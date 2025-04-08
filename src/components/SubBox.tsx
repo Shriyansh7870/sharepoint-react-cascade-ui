@@ -14,7 +14,8 @@ interface SubBoxProps {
 
 // Helper function to get icon component from string name
 const getIconByName = (name: string) => {
-  const IconComponent = (LucideIcons as Record<string, React.FC<any>>)[
+  // Cast LucideIcons to any to bypass TypeScript's type checking for dynamic access
+  const IconComponent = (LucideIcons as any)[
     name.charAt(0).toUpperCase() + name.slice(1)
   ] || LucideIcons.FileText;
   
